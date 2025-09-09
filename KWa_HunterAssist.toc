@@ -1,0 +1,6 @@
+## Interface: 11200
+## Title: |cff00ff00[KWa]|r HunterAssist
+## Notes: Hunter utility addon. Currently announces when your pet is unhappy.
+## Author: Khoa Nguyen
+## SavedVariables: KWA_HunterAssist_Config
+KWa_HunterAssist.lua
