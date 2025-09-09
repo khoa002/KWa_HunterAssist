@@ -96,17 +96,6 @@ Bounds and validation:
 
 4. Restart WoW and enable **[KWa]HunterAssist** in the AddOns list.
 
-### Colored AddOn Title
-
-Use WoW color codes in the TOC to color `[KWa]` lime green:
-
-    ## Interface: 11200
-    ## Title: |cff00ff00[KWa]|r HunterAssist
-    ## Notes: Hunter utility addon. Pet Unhappy alerts + Feed Pet countdown.
-    ## Author: Khoa Nguyen
-    ## SavedVariables: KWA_HunterAssist_Config
-    KWa_HunterAssist.lua
-
 ---
 
 ## How It Works
@@ -149,20 +138,6 @@ Use WoW color codes in the TOC to color `[KWa]` lime green:
 - If alerts are too frequent or too quiet, adjust:
   - `/kwa ha interval 10`
   - `/kwa ha sound off`
-
----
-
-## Roadmap
-
-Planned additions for the Hunter toolkit:
-
-- Pet health and focus indicators.
-- Trap and key cooldown timers.
-- Ammo and quiver capacity reminders.
-- Optional screen flashes and movable frames.
-- Shared `/kwa` dispatcher for future `[KWa]` modules.
-
-Contributions and suggestions are welcome.
 
 ---
 
