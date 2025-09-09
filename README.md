@@ -19,8 +19,8 @@ This is the first module in a growing suite under the `[KWa]` namespace.
 
 - Detects when your pet becomes **Unhappy**.
 - Alerts are **out of combat only** to keep fights clean.
-  - If the pet becomes Unhappy during combat, one alert is queued and shown immediately after combat ends.
-  - While you remain out of combat and the pet is still Unhappy, the alert repeats at a configurable interval.
+    - If the pet becomes Unhappy during combat, one alert is queued and shown immediately after combat ends.
+    - While you remain out of combat and the pet is still Unhappy, the alert repeats at a configurable interval.
 - Alerts are **local only**: red screen text (UIErrorsFrame) plus optional sound.
 
 ### 🍖 Feed Pet Countdown
@@ -28,11 +28,11 @@ This is the first module in a growing suite under the `[KWa]` namespace.
 - When you cast **Feed Pet**, a visible countdown appears.
 - Default duration: **20 seconds** (configurable).
 - The countdown ends early if:
-  - The feed buff ends, or
-  - The pet enters combat, or
-  - The pet is dismissed.
+    - The feed buff ends, or
+    - The pet enters combat, or
+    - The pet is dismissed.
 - Robust detection for 1.12:
-  - Hooks `CastSpell`, `CastSpellByName`, and `UseAction` so it works from spellbook, macros, or action bar.
+    - Hooks `CastSpell`, `CastSpellByName`, and `UseAction` so it works from spellbook, macros, or action bar.
 
 ### 🧪 Debug Mode
 
@@ -43,10 +43,11 @@ This is the first module in a growing suite under the `[KWa]` namespace.
 
 ## Commands
 
-All commands are scoped under `/kwa ha`.
+All commands are scoped under `/kwa ha`. For a movable configuration window use `/kwa config`.
 
 | Command                        | Description                                                     |
-| ------------------------------ | --------------------------------------------------------------- |
+|--------------------------------|-----------------------------------------------------------------|
+| `/kwa config`                  | Open the configuration window.                                  |
 | `/kwa ha on`                   | Enable the addon.                                               |
 | `/kwa ha off`                  | Disable the addon.                                              |
 | `/kwa ha test`                 | Test the Unhappy alert and the Feed Pet countdown.              |
@@ -126,25 +127,28 @@ Bounds and validation:
 ## Troubleshooting
 
 - Turn on debug:
-  - `/kwa ha debug on`
-  - You should see lines like:
-    - `Detected Feed Pet via UseAction slot X`
-    - `UNIT_AURA for pet. feedPendingCast=true`
-    - `Feed buff detected -> start countdown`
+    - `/kwa ha debug on`
+    - You should see lines like:
+        - `Detected Feed Pet via UseAction slot X`
+        - `UNIT_AURA for pet. feedPendingCast=true`
+        - `Feed buff detected -> start countdown`
 - If the countdown does not start, set the buff name explicitly:
-  - `/kwa ha feedname Feed Pet Effect`
-  - For non-English clients, set the localized buff name shown by `/kwa ha dumpbuffs`.
+    - `/kwa ha feedname Feed Pet Effect`
+    - For non-English clients, set the localized buff name shown by `/kwa ha dumpbuffs`.
 - If you use a macro, include `/cast Feed Pet` exactly.
 - If alerts are too frequent or too quiet, adjust:
-  - `/kwa ha interval 10`
-  - `/kwa ha sound off`
+    - `/kwa ha interval 10`
+    - `/kwa ha sound off`
 
 ---
 
 ## Versioning
 
-- **v0.2.0**: Unhappy alerts are out of combat only with a queued post-combat alert. Robust Feed Pet detection via `UseAction` in addition to `CastSpell` and `CastSpellByName`. Added debug mode and `/kwa ha dumpbuffs`. Font improvements for visibility.
-- **v0.1.0**: Initial public version. Unhappy alerts with repeat interval, Feed Pet countdown, settings reset, and colored `[KWa]` tag in the AddOns list.
+- **v0.2.0**: Unhappy alerts are out of combat only with a queued post-combat alert. Robust Feed Pet detection via
+  `UseAction` in addition to `CastSpell` and `CastSpellByName`. Added debug mode and `/kwa ha dumpbuffs`. Font
+  improvements for visibility.
+- **v0.1.0**: Initial public version. Unhappy alerts with repeat interval, Feed Pet countdown, settings reset, and
+  colored `[KWa]` tag in the AddOns list.
 
 ---
 
