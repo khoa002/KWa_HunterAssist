@@ -12,6 +12,7 @@ local DEFAULTS = {
     feedname = "Feed Pet Effect", -- pet buff name to match (if tooltip API available)
     ammo = 200, -- ammo warning threshold
     ammoSound = true, -- play sound on low ammo alert
+    merchant = true, -- alert when visiting a merchant
     debug = false -- debug log off by default
 }
 
@@ -25,6 +26,7 @@ KWA_HunterAssist_Config =
         feedname = DEFAULTS.feedname,
         ammo = DEFAULTS.ammo,
         ammoSound = DEFAULTS.ammoSound,
+        merchant = DEFAULTS.merchant,
         debug = DEFAULTS.debug,
         configX = nil,
         configY = nil
@@ -73,7 +75,7 @@ end
 -- ======= UI: config window =======
 local configFrame = CreateFrame("Frame", "KWA_ConfigFrame", UIParent)
 configFrame:SetWidth(320)
-configFrame:SetHeight(340)
+configFrame:SetHeight(400)
 configFrame:SetFrameStrata("DIALOG")
 configFrame:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background", edgeFile = "Interface/Tooltips/UI-Tooltip-Border", edgeSize = 16, tile = true, tileSize = 16, insets = {left = 4, right = 4, top = 4, bottom = 4}})
 configFrame:SetBackdropColor(0, 0, 0, 1)
@@ -298,35 +300,23 @@ ammoSoundCheck:SetScript("OnClick", function()
     KWA_HunterAssist_Config.ammoSound = this:GetChecked()
 end)
 
--- ======= Equipment group =======
-local equipGroup = configFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-equipGroup:SetPoint("TOPLEFT", feedNameLabel, "BOTTOMLEFT", 0, -20)
-equipGroup:SetText("Equipment")
-
--- Ammo threshold
-local ammoLabel = configFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-ammoLabel:SetPoint("TOPLEFT", equipGroup, "BOTTOMLEFT", 0, -10)
-ammoLabel:SetText("Ammo threshold:")
-local ammoBox = CreateFrame("EditBox", "KWA_ConfigAmmo", configFrame, "InputBoxTemplate")
-ammoBox:SetWidth(40)
-ammoBox:SetHeight(20)
-ammoBox:SetPoint("LEFT", ammoLabel, "LEFT", COL_INPUT_X - COL_LABEL_X, 0)
-ammoBox:SetAutoFocus(false)
-ammoBox:SetScript("OnEnterPressed", function()
-    local v = tonumber(this:GetText())
-    if v then
-        KWA_HunterAssist_Config.ammo = v
-    end
-    this:ClearFocus()
+-- Alert at merchant
+local merchantLabel = configFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+merchantLabel:SetPoint("TOPLEFT", ammoSoundLabel, "BOTTOMLEFT", 0, -10)
+merchantLabel:SetText("Alert at merchant")
+local merchantCheck = CreateFrame("CheckButton", "KWA_ConfigMerchant", configFrame, "UICheckButtonTemplate")
+merchantCheck:SetPoint("LEFT", merchantLabel, "LEFT", COL_INPUT_X - COL_LABEL_X, 0)
+local merchantDefault = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
+merchantDefault:SetWidth(60)
+merchantDefault:SetHeight(20)
+merchantDefault:SetPoint("LEFT", merchantLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
+merchantDefault:SetText("Default")
+merchantDefault:SetScript("OnClick", function()
+    KWA_HunterAssist_Config.merchant = DEFAULTS.merchant
+    merchantCheck:SetChecked(DEFAULTS.merchant)
 end)
-local ammoDefault = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
-ammoDefault:SetWidth(60)
-ammoDefault:SetHeight(20)
-ammoDefault:SetPoint("LEFT", ammoLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
-ammoDefault:SetText("Default")
-ammoDefault:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.ammo = DEFAULTS.ammo
-    ammoBox:SetText(DEFAULTS.ammo)
+merchantCheck:SetScript("OnClick", function()
+    KWA_HunterAssist_Config.merchant = this:GetChecked()
 end)
 
 -- Close button
@@ -347,6 +337,7 @@ configFrame:SetScript("OnShow", function()
     feedNameBox:SetText(KWA_HunterAssist_Config.feedname or "")
     ammoBox:SetText(KWA_HunterAssist_Config.ammo)
     ammoSoundCheck:SetChecked(KWA_HunterAssist_Config.ammoSound)
+    merchantCheck:SetChecked(KWA_HunterAssist_Config.merchant)
     debugCheck:SetChecked(KWA_HunterAssist_Config.debug)
 end)
 
@@ -482,6 +473,7 @@ f:RegisterEvent("UNIT_AURA")
 f:RegisterEvent("SPELLCAST_START")
 f:RegisterEvent("PLAYER_REGEN_DISABLED")
 f:RegisterEvent("PLAYER_REGEN_ENABLED")
+f:RegisterEvent("MERCHANT_SHOW")
 
 local eventHandlers = {}
 
@@ -571,8 +563,61 @@ eventHandlers.PLAYER_REGEN_ENABLED = function()
         if slot then
             local count = GetInventoryItemCount("player", slot) or 0
             Debug("Ammo count=" .. tostring(count))
-            if count > 0 and count < threshold then
+            if count < threshold then
                 SendAlert("Low ammo (" .. count .. ")!", KWA_HunterAssist_Config.ammoSound)
+            else
+                Debug("Ammo count above threshold")
+            end
+        end
+    end
+end
+
+eventHandlers.MERCHANT_SHOW = function()
+    Debug("MERCHANT_SHOW fired")
+    if not KWA_HunterAssist_Config.enabled or not KWA_HunterAssist_Config.merchant then
+        Debug("MERCHANT_SHOW: alerts disabled")
+        return
+    end
+    local threshold = CurrentAmmoThreshold()
+    if not (threshold > 0 and IsHunter() and GetMerchantNumItems and GetMerchantItemInfo) then
+        Debug("MERCHANT_SHOW: preconditions not met (threshold=" .. tostring(threshold) .. ")")
+        return
+    end
+    local sellsAmmo = false
+    local numItems = GetMerchantNumItems()
+    Debug("MERCHANT_SHOW: numItems=" .. tostring(numItems))
+    for i = 1, numItems do
+        local name = GetMerchantItemInfo(i)
+        local link = GetMerchantItemLink and GetMerchantItemLink(i)
+        local equipLoc
+        if GetItemInfo then
+            local item = link or name
+            if item then
+                local _, _, _, _, _, _, _, _, loc = GetItemInfo(item)
+                equipLoc = loc
+            end
+        end
+        Debug("MERCHANT_SHOW: item " .. i .. " name=" .. tostring(name) .. " equipLoc=" .. tostring(equipLoc))
+        local nameLower = string.lower(name or "")
+        if equipLoc == "INVTYPE_AMMO"
+            or string.find(nameLower, "arrow", 1, true)
+            or string.find(nameLower, "bullet", 1, true)
+            or string.find(nameLower, "shot", 1, true)
+            or string.find(nameLower, "shell", 1, true) then
+            sellsAmmo = true
+            break
+        end
+    end
+    Debug("MERCHANT_SHOW: sellsAmmo=" .. tostring(sellsAmmo))
+    if sellsAmmo and GetInventorySlotInfo and GetInventoryItemCount then
+        local slot = GetInventorySlotInfo("AmmoSlot")
+        if slot then
+            local count = GetInventoryItemCount("player", slot) or 0
+            Debug("MERCHANT_SHOW: ammo count=" .. tostring(count) .. ", threshold=" .. threshold)
+            if count < threshold then
+                SendAlert("Low ammo (" .. count .. ")!", KWA_HunterAssist_Config.ammoSound)
+            else
+                Debug("MERCHANT_SHOW: ammo not below threshold")
             end
         end
     end
