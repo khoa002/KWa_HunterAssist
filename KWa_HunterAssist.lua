@@ -10,6 +10,7 @@ local DEFAULTS = {
     interval = 5, -- seconds between repeat alerts while Unhappy (1..60)
     feeddur = 20, -- default Feed Pet buff duration in seconds (3..120)
     feedname = "Feed Pet Effect", -- pet buff name to match (if tooltip API available)
+    ammo = 200, -- ammo warning threshold
     debug = false -- debug log off by default
 }
 
@@ -21,6 +22,7 @@ KWA_HunterAssist_Config =
         interval = DEFAULTS.interval,
         feeddur = DEFAULTS.feeddur,
         feedname = DEFAULTS.feedname,
+        ammo = DEFAULTS.ammo,
         debug = DEFAULTS.debug,
         configX = nil,
         configY = nil
@@ -69,7 +71,7 @@ end
 -- ======= UI: config window =======
 local configFrame = CreateFrame("Frame", "KWA_ConfigFrame", UIParent)
 configFrame:SetWidth(320)
-configFrame:SetHeight(300)
+configFrame:SetHeight(340)
 configFrame:SetFrameStrata("DIALOG")
 configFrame:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background", edgeFile = "Interface/Tooltips/UI-Tooltip-Border", edgeSize = 16, tile = true, tileSize = 16, insets = {left = 4, right = 4, top = 4, bottom = 4}})
 configFrame:SetBackdropColor(0, 0, 0, 1)
@@ -244,6 +246,37 @@ feedNameDefault:SetScript("OnClick", function()
     feedNameBox:SetText(DEFAULTS.feedname)
 end)
 
+-- ======= Equipment group =======
+local equipGroup = configFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+equipGroup:SetPoint("TOPLEFT", feedNameLabel, "BOTTOMLEFT", 0, -20)
+equipGroup:SetText("Equipment")
+
+-- Ammo threshold
+local ammoLabel = configFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+ammoLabel:SetPoint("TOPLEFT", equipGroup, "BOTTOMLEFT", 0, -10)
+ammoLabel:SetText("Ammo threshold:")
+local ammoBox = CreateFrame("EditBox", "KWA_ConfigAmmo", configFrame, "InputBoxTemplate")
+ammoBox:SetWidth(40)
+ammoBox:SetHeight(20)
+ammoBox:SetPoint("LEFT", ammoLabel, "LEFT", COL_INPUT_X - COL_LABEL_X, 0)
+ammoBox:SetAutoFocus(false)
+ammoBox:SetScript("OnEnterPressed", function()
+    local v = tonumber(this:GetText())
+    if v then
+        KWA_HunterAssist_Config.ammo = v
+    end
+    this:ClearFocus()
+end)
+local ammoDefault = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
+ammoDefault:SetWidth(60)
+ammoDefault:SetHeight(20)
+ammoDefault:SetPoint("LEFT", ammoLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
+ammoDefault:SetText("Default")
+ammoDefault:SetScript("OnClick", function()
+    KWA_HunterAssist_Config.ammo = DEFAULTS.ammo
+    ammoBox:SetText(DEFAULTS.ammo)
+end)
+
 -- Close button
 local closeBtn = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
 closeBtn:SetWidth(80)
@@ -260,6 +293,7 @@ configFrame:SetScript("OnShow", function()
     intervalBox:SetText(KWA_HunterAssist_Config.interval)
     feedDurBox:SetText(KWA_HunterAssist_Config.feeddur)
     feedNameBox:SetText(KWA_HunterAssist_Config.feedname or "")
+    ammoBox:SetText(KWA_HunterAssist_Config.ammo)
     debugCheck:SetChecked(KWA_HunterAssist_Config.debug)
 end)
 
@@ -311,6 +345,10 @@ end
 
 local function CurrentFeedDur()
     return Clamp(KWA_HunterAssist_Config.feeddur, 3, 120, DEFAULTS.feeddur)
+end
+
+local function CurrentAmmoThreshold()
+    return Clamp(KWA_HunterAssist_Config.ammo, 0, 10000, DEFAULTS.ammo)
 end
 
 local function PetHasFeedBuff()
@@ -474,6 +512,17 @@ eventHandlers.PLAYER_REGEN_ENABLED = function()
         end
     end
     pendingUnhappyAlert = false
+    local threshold = CurrentAmmoThreshold()
+    if threshold > 0 and IsHunter() and GetInventorySlotInfo and GetInventoryItemCount then
+        local slot = GetInventorySlotInfo("AmmoSlot")
+        if slot then
+            local count = GetInventoryItemCount("player", slot) or 0
+            Debug("Ammo count=" .. tostring(count))
+            if count > 0 and count < threshold then
+                SendAlert("Low ammo (" .. count .. ")!")
+            end
+        end
+    end
 end
 
 f:SetScript("OnEvent", function()

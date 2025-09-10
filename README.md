@@ -34,6 +34,11 @@ This is the first module in a growing suite under the `[KWa]` namespace.
 - Robust detection for 1.12:
     - Hooks `CastSpell`, `CastSpellByName`, and `UseAction` so it works from spellbook, macros, or action bar.
 
+### 🔫 Low Ammo Warning
+
+- Checks your equipped ammo count when leaving combat.
+- Alerts if the count falls below a configurable threshold (default 200).
+
 ### 🧪 Debug Mode
 
 - Debug mode prints detection steps so you can see what the addon is doing.
@@ -57,6 +62,7 @@ SavedVariables: `KWA_HunterAssist_Config`
     interval = 5      -- seconds between repeat Unhappy alerts (out of combat only)
     feeddur  = 20     -- seconds for the Feed Pet countdown
     feedname = "Feed Pet Effect"
+    ammo     = 200    -- ammo warning threshold
     debug    = false  -- debug log off by default
 
 Bounds and validation:
