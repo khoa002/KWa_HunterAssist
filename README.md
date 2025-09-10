@@ -57,20 +57,26 @@ Open the configuration window with `/kwa config`.
 
 SavedVariables: `KWA_HunterAssist_Config`
 
-    enabled  = true
-    sound    = true
-    interval = 5      -- seconds between repeat Unhappy alerts (out of combat only)
-    feeddur  = 20     -- seconds for the Feed Pet countdown
-    feedname = "Feed Pet Effect"
-    ammo     = 200    -- ammo warning threshold
-    ammoSound = true  -- play sound on low ammo (requires sound=true)
-    merchant = true   -- alert when opening a merchant
-    debug    = false  -- debug log off by default
+    general = {
+        addonEnabled = true,
+        debugLoggingEnabled = false,
+    }
+    pet = {
+        alertSoundEnabled = true,
+        unhappyAlertIntervalSeconds = 5,  -- seconds between repeat Unhappy alerts (out of combat only)
+        feedBuffDurationSeconds = 20,     -- seconds for the Feed Pet countdown
+        feedBuffName = "Feed Pet Effect",
+    }
+    equipment = {
+        lowAmmoThreshold = 200,           -- ammo warning threshold
+        lowAmmoSoundEnabled = true,       -- play sound on low ammo (requires pet.alertSoundEnabled)
+        merchantAlertEnabled = true,      -- alert when opening a merchant
+    }
 
 Bounds and validation:
 
-- `interval` is clamped to 1–60 seconds.
-- `feeddur` is clamped to 3–120 seconds.
+- `pet.unhappyAlertIntervalSeconds` is clamped to 1–60 seconds.
+- `pet.feedBuffDurationSeconds` is clamped to 3–120 seconds.
 
 ---
 
@@ -103,7 +109,8 @@ Bounds and validation:
 ### Feed Pet Countdown
 
 - Detects casts through `CastSpell`, `CastSpellByName`, and `UseAction`.
-- Waits for `UNIT_AURA` on the pet to confirm the buff, then starts a countdown for `feeddur` seconds.
+- Waits for `UNIT_AURA` on the pet to confirm the buff, then starts a countdown for `pet.feedBuffDurationSeconds`
+  seconds.
 - Cancels if the buff ends or the pet enters combat.
 - Draws a centered text overlay using the FRIZQT font for reliable visibility on vanilla clients.
 

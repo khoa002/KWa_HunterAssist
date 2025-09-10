@@ -4,30 +4,42 @@
 local f = CreateFrame("Frame")
 
 -- Saved config
-local DEFAULTS = {
-    enabled = true,
-    sound = true,
-    interval = 5, -- seconds between repeat alerts while Unhappy (1..60)
-    feeddur = 20, -- default Feed Pet buff duration in seconds (3..120)
-    feedname = "Feed Pet Effect", -- pet buff name to match (if tooltip API available)
-    ammo = 200, -- ammo warning threshold
-    ammoSound = true, -- play sound on low ammo alert
-    merchant = true, -- alert when visiting a merchant
-    debug = false -- debug log off by default
+local DEFAULT_SETTINGS = {
+    general = {
+        addonEnabled = true,
+        debugLoggingEnabled = false,
+    },
+    pet = {
+        alertSoundEnabled = true,
+        unhappyAlertIntervalSeconds = 5, -- seconds between repeat alerts while Unhappy (1..60)
+        feedBuffDurationSeconds = 20, -- default Feed Pet buff duration in seconds (3..120)
+        feedBuffName = "Feed Pet Effect", -- pet buff name to match (if tooltip API available)
+    },
+    equipment = {
+        lowAmmoThreshold = 200, -- ammo warning threshold
+        lowAmmoSoundEnabled = true, -- play sound on low ammo alert
+        merchantAlertEnabled = true, -- alert when visiting a merchant
+    },
 }
 
 KWA_HunterAssist_Config =
     KWA_HunterAssist_Config or
     {
-        enabled = DEFAULTS.enabled,
-        sound = DEFAULTS.sound,
-        interval = DEFAULTS.interval,
-        feeddur = DEFAULTS.feeddur,
-        feedname = DEFAULTS.feedname,
-        ammo = DEFAULTS.ammo,
-        ammoSound = DEFAULTS.ammoSound,
-        merchant = DEFAULTS.merchant,
-        debug = DEFAULTS.debug,
+        general = {
+            addonEnabled = DEFAULT_SETTINGS.general.addonEnabled,
+            debugLoggingEnabled = DEFAULT_SETTINGS.general.debugLoggingEnabled,
+        },
+        pet = {
+            alertSoundEnabled = DEFAULT_SETTINGS.pet.alertSoundEnabled,
+            unhappyAlertIntervalSeconds = DEFAULT_SETTINGS.pet.unhappyAlertIntervalSeconds,
+            feedBuffDurationSeconds = DEFAULT_SETTINGS.pet.feedBuffDurationSeconds,
+            feedBuffName = DEFAULT_SETTINGS.pet.feedBuffName,
+        },
+        equipment = {
+            lowAmmoThreshold = DEFAULT_SETTINGS.equipment.lowAmmoThreshold,
+            lowAmmoSoundEnabled = DEFAULT_SETTINGS.equipment.lowAmmoSoundEnabled,
+            merchantAlertEnabled = DEFAULT_SETTINGS.equipment.merchantAlertEnabled,
+        },
         configX = nil,
         configY = nil
     }
@@ -114,11 +126,11 @@ enabledDefault:SetHeight(20)
 enabledDefault:SetPoint("LEFT", enabledLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
 enabledDefault:SetText("Default")
 enabledDefault:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.enabled = DEFAULTS.enabled
-    enabledCheck:SetChecked(DEFAULTS.enabled)
+    KWA_HunterAssist_Config.general.addonEnabled = DEFAULT_SETTINGS.general.addonEnabled
+    enabledCheck:SetChecked(DEFAULT_SETTINGS.general.addonEnabled)
 end)
 enabledCheck:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.enabled = this:GetChecked()
+    KWA_HunterAssist_Config.general.addonEnabled = this:GetChecked()
 end)
 
 -- Debug
@@ -133,11 +145,11 @@ debugDefault:SetHeight(20)
 debugDefault:SetPoint("LEFT", debugLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
 debugDefault:SetText("Default")
 debugDefault:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.debug = DEFAULTS.debug
-    debugCheck:SetChecked(DEFAULTS.debug)
+    KWA_HunterAssist_Config.general.debugLoggingEnabled = DEFAULT_SETTINGS.general.debugLoggingEnabled
+    debugCheck:SetChecked(DEFAULT_SETTINGS.general.debugLoggingEnabled)
 end)
 debugCheck:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.debug = this:GetChecked()
+    KWA_HunterAssist_Config.general.debugLoggingEnabled = this:GetChecked()
 end)
 
 -- ======= Pet Happiness group =======
@@ -157,11 +169,11 @@ soundDefault:SetHeight(20)
 soundDefault:SetPoint("LEFT", soundLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
 soundDefault:SetText("Default")
 soundDefault:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.sound = DEFAULTS.sound
-    soundCheck:SetChecked(DEFAULTS.sound)
+    KWA_HunterAssist_Config.pet.alertSoundEnabled = DEFAULT_SETTINGS.pet.alertSoundEnabled
+    soundCheck:SetChecked(DEFAULT_SETTINGS.pet.alertSoundEnabled)
 end)
 soundCheck:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.sound = this:GetChecked()
+    KWA_HunterAssist_Config.pet.alertSoundEnabled = this:GetChecked()
 end)
 
 -- Alert interval
@@ -176,7 +188,7 @@ intervalBox:SetAutoFocus(false)
 intervalBox:SetScript("OnEnterPressed", function()
     local v = tonumber(this:GetText())
     if v then
-        KWA_HunterAssist_Config.interval = v
+        KWA_HunterAssist_Config.pet.unhappyAlertIntervalSeconds = v
         alertTimer = 0
     end
     this:ClearFocus()
@@ -187,8 +199,8 @@ intervalDefault:SetHeight(20)
 intervalDefault:SetPoint("LEFT", intervalLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
 intervalDefault:SetText("Default")
 intervalDefault:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.interval = DEFAULTS.interval
-    intervalBox:SetText(DEFAULTS.interval)
+    KWA_HunterAssist_Config.pet.unhappyAlertIntervalSeconds = DEFAULT_SETTINGS.pet.unhappyAlertIntervalSeconds
+    intervalBox:SetText(DEFAULT_SETTINGS.pet.unhappyAlertIntervalSeconds)
     alertTimer = 0
 end)
 
@@ -204,7 +216,7 @@ feedDurBox:SetAutoFocus(false)
 feedDurBox:SetScript("OnEnterPressed", function()
     local v = tonumber(this:GetText())
     if v then
-        KWA_HunterAssist_Config.feeddur = v
+        KWA_HunterAssist_Config.pet.feedBuffDurationSeconds = v
         if feedActive then
             ShowFeedCountdown(v)
         end
@@ -217,10 +229,10 @@ feedDurDefault:SetHeight(20)
 feedDurDefault:SetPoint("LEFT", feedDurLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
 feedDurDefault:SetText("Default")
 feedDurDefault:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.feeddur = DEFAULTS.feeddur
-    feedDurBox:SetText(DEFAULTS.feeddur)
+    KWA_HunterAssist_Config.pet.feedBuffDurationSeconds = DEFAULT_SETTINGS.pet.feedBuffDurationSeconds
+    feedDurBox:SetText(DEFAULT_SETTINGS.pet.feedBuffDurationSeconds)
     if feedActive then
-        ShowFeedCountdown(DEFAULTS.feeddur)
+        ShowFeedCountdown(DEFAULT_SETTINGS.pet.feedBuffDurationSeconds)
     end
 end)
 
@@ -236,7 +248,7 @@ feedNameBox:SetAutoFocus(false)
 feedNameBox:SetScript("OnEnterPressed", function()
     local txt = this:GetText()
     if txt and txt ~= "" then
-        KWA_HunterAssist_Config.feedname = txt
+        KWA_HunterAssist_Config.pet.feedBuffName = txt
     end
     this:ClearFocus()
 end)
@@ -246,8 +258,8 @@ feedNameDefault:SetHeight(20)
 feedNameDefault:SetPoint("LEFT", feedNameLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
 feedNameDefault:SetText("Default")
 feedNameDefault:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.feedname = DEFAULTS.feedname
-    feedNameBox:SetText(DEFAULTS.feedname)
+    KWA_HunterAssist_Config.pet.feedBuffName = DEFAULT_SETTINGS.pet.feedBuffName
+    feedNameBox:SetText(DEFAULT_SETTINGS.pet.feedBuffName)
 end)
 
 -- ======= Equipment group =======
@@ -267,7 +279,7 @@ ammoBox:SetAutoFocus(false)
 ammoBox:SetScript("OnEnterPressed", function()
     local v = tonumber(this:GetText())
     if v then
-        KWA_HunterAssist_Config.ammo = v
+        KWA_HunterAssist_Config.equipment.lowAmmoThreshold = v
     end
     this:ClearFocus()
 end)
@@ -277,8 +289,8 @@ ammoDefault:SetHeight(20)
 ammoDefault:SetPoint("LEFT", ammoLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
 ammoDefault:SetText("Default")
 ammoDefault:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.ammo = DEFAULTS.ammo
-    ammoBox:SetText(DEFAULTS.ammo)
+    KWA_HunterAssist_Config.equipment.lowAmmoThreshold = DEFAULT_SETTINGS.equipment.lowAmmoThreshold
+    ammoBox:SetText(DEFAULT_SETTINGS.equipment.lowAmmoThreshold)
 end)
 
 -- Low ammo sound
@@ -293,11 +305,11 @@ ammoSoundDefault:SetHeight(20)
 ammoSoundDefault:SetPoint("LEFT", ammoSoundLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
 ammoSoundDefault:SetText("Default")
 ammoSoundDefault:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.ammoSound = DEFAULTS.ammoSound
-    ammoSoundCheck:SetChecked(DEFAULTS.ammoSound)
+    KWA_HunterAssist_Config.equipment.lowAmmoSoundEnabled = DEFAULT_SETTINGS.equipment.lowAmmoSoundEnabled
+    ammoSoundCheck:SetChecked(DEFAULT_SETTINGS.equipment.lowAmmoSoundEnabled)
 end)
 ammoSoundCheck:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.ammoSound = this:GetChecked()
+    KWA_HunterAssist_Config.equipment.lowAmmoSoundEnabled = this:GetChecked()
 end)
 
 -- Alert at merchant
@@ -312,11 +324,11 @@ merchantDefault:SetHeight(20)
 merchantDefault:SetPoint("LEFT", merchantLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
 merchantDefault:SetText("Default")
 merchantDefault:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.merchant = DEFAULTS.merchant
-    merchantCheck:SetChecked(DEFAULTS.merchant)
+    KWA_HunterAssist_Config.equipment.merchantAlertEnabled = DEFAULT_SETTINGS.equipment.merchantAlertEnabled
+    merchantCheck:SetChecked(DEFAULT_SETTINGS.equipment.merchantAlertEnabled)
 end)
 merchantCheck:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.merchant = this:GetChecked()
+    KWA_HunterAssist_Config.equipment.merchantAlertEnabled = this:GetChecked()
 end)
 
 -- Close button
@@ -330,15 +342,15 @@ closeBtn:SetScript("OnClick", function()
 end)
 
 configFrame:SetScript("OnShow", function()
-    enabledCheck:SetChecked(KWA_HunterAssist_Config.enabled)
-    soundCheck:SetChecked(KWA_HunterAssist_Config.sound)
-    intervalBox:SetText(KWA_HunterAssist_Config.interval)
-    feedDurBox:SetText(KWA_HunterAssist_Config.feeddur)
-    feedNameBox:SetText(KWA_HunterAssist_Config.feedname or "")
-    ammoBox:SetText(KWA_HunterAssist_Config.ammo)
-    ammoSoundCheck:SetChecked(KWA_HunterAssist_Config.ammoSound)
-    merchantCheck:SetChecked(KWA_HunterAssist_Config.merchant)
-    debugCheck:SetChecked(KWA_HunterAssist_Config.debug)
+    enabledCheck:SetChecked(KWA_HunterAssist_Config.general.addonEnabled)
+    soundCheck:SetChecked(KWA_HunterAssist_Config.pet.alertSoundEnabled)
+    intervalBox:SetText(KWA_HunterAssist_Config.pet.unhappyAlertIntervalSeconds)
+    feedDurBox:SetText(KWA_HunterAssist_Config.pet.feedBuffDurationSeconds)
+    feedNameBox:SetText(KWA_HunterAssist_Config.pet.feedBuffName or "")
+    ammoBox:SetText(KWA_HunterAssist_Config.equipment.lowAmmoThreshold)
+    ammoSoundCheck:SetChecked(KWA_HunterAssist_Config.equipment.lowAmmoSoundEnabled)
+    merchantCheck:SetChecked(KWA_HunterAssist_Config.equipment.merchantAlertEnabled)
+    debugCheck:SetChecked(KWA_HunterAssist_Config.general.debugLoggingEnabled)
 end)
 
 -- ======= Helpers =======
@@ -348,7 +360,7 @@ local function IsHunter()
 end
 
 local function Debug(msg)
-    if KWA_HunterAssist_Config.debug then
+    if KWA_HunterAssist_Config.general.debugLoggingEnabled then
         DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa][HA][DBG]|r " .. tostring(msg))
     end
 end
@@ -362,7 +374,7 @@ local function SendAlert(msg, playSound)
     if UIErrorsFrame and UIErrorsFrame.AddMessage then
         UIErrorsFrame:AddMessage(msg, 1.0, 0.1, 0.1, 1.0)
     end
-    if KWA_HunterAssist_Config.sound and (playSound == nil or playSound) and PlaySoundFile then
+    if KWA_HunterAssist_Config.pet.alertSoundEnabled and (playSound == nil or playSound) and PlaySoundFile then
         PlaySoundFile("Sound\\Interface\\RaidWarning.wav")
     end
 end
@@ -384,15 +396,15 @@ local function Clamp(v, min, max, default)
 end
 
 local function CurrentInterval()
-    return Clamp(KWA_HunterAssist_Config.interval, 1, 60, DEFAULTS.interval)
+    return Clamp(KWA_HunterAssist_Config.pet.unhappyAlertIntervalSeconds, 1, 60, DEFAULT_SETTINGS.pet.unhappyAlertIntervalSeconds)
 end
 
 local function CurrentFeedDur()
-    return Clamp(KWA_HunterAssist_Config.feeddur, 3, 120, DEFAULTS.feeddur)
+    return Clamp(KWA_HunterAssist_Config.pet.feedBuffDurationSeconds, 3, 120, DEFAULT_SETTINGS.pet.feedBuffDurationSeconds)
 end
 
 local function CurrentAmmoThreshold()
-    return Clamp(KWA_HunterAssist_Config.ammo, 0, 10000, DEFAULTS.ammo)
+    return Clamp(KWA_HunterAssist_Config.equipment.lowAmmoThreshold, 0, 10000, DEFAULT_SETTINGS.equipment.lowAmmoThreshold)
 end
 
 local function PetHasFeedBuff()
@@ -406,8 +418,8 @@ local function PetHasFeedBuff()
             local name = GameTooltipTextLeft1:GetText()
             GameTooltip:Hide()
             if
-            name and KWA_HunterAssist_Config.feedname and
-                    string.lower(name) == string.lower(KWA_HunterAssist_Config.feedname)
+            name and KWA_HunterAssist_Config.pet.feedBuffName and
+                    string.lower(name) == string.lower(KWA_HunterAssist_Config.pet.feedBuffName)
             then
                 return true
             end
@@ -423,7 +435,7 @@ end
 
 -- ======= Core checks =======
 local function CheckPet(force)
-    if not KWA_HunterAssist_Config.enabled then
+    if not KWA_HunterAssist_Config.general.addonEnabled then
         return
     end
     if not IsHunter() then
@@ -479,9 +491,12 @@ local eventHandlers = {}
 
 eventHandlers.PLAYER_LOGIN = function()
     KWA_HunterAssist_Config = KWA_HunterAssist_Config or {}
-    for k, v in pairs(DEFAULTS) do
-        if KWA_HunterAssist_Config[k] == nil then
-            KWA_HunterAssist_Config[k] = v
+    for group, defaults in pairs(DEFAULT_SETTINGS) do
+        KWA_HunterAssist_Config[group] = KWA_HunterAssist_Config[group] or {}
+        for key, val in pairs(defaults) do
+            if KWA_HunterAssist_Config[group][key] == nil then
+                KWA_HunterAssist_Config[group][key] = val
+            end
         end
     end
     if KWA_HunterAssist_Config.configX and KWA_HunterAssist_Config.configY then
@@ -550,7 +565,7 @@ eventHandlers.PLAYER_REGEN_ENABLED = function()
     inCombat = false
     Debug("PLAYER_REGEN_ENABLED -> inCombat=false")
     -- If we became unhappy during combat, fire the queued alert now.
-    if pendingUnhappyAlert and KWA_HunterAssist_Config.enabled and UnitExists("pet") then
+    if pendingUnhappyAlert and KWA_HunterAssist_Config.general.addonEnabled and UnitExists("pet") then
         local happiness = GetPetHappiness and GetPetHappiness()
         if happiness == 1 then
             AlertUnhappy()
@@ -564,7 +579,7 @@ eventHandlers.PLAYER_REGEN_ENABLED = function()
             local count = GetInventoryItemCount("player", slot) or 0
             Debug("Ammo count=" .. tostring(count))
             if count < threshold then
-                SendAlert("Low ammo (" .. count .. ")!", KWA_HunterAssist_Config.ammoSound)
+                SendAlert("Low ammo (" .. count .. ")!", KWA_HunterAssist_Config.equipment.lowAmmoSoundEnabled)
             else
                 Debug("Ammo count above threshold")
             end
@@ -574,7 +589,7 @@ end
 
 eventHandlers.MERCHANT_SHOW = function()
     Debug("MERCHANT_SHOW fired")
-    if not KWA_HunterAssist_Config.enabled or not KWA_HunterAssist_Config.merchant then
+    if not KWA_HunterAssist_Config.general.addonEnabled or not KWA_HunterAssist_Config.equipment.merchantAlertEnabled then
         Debug("MERCHANT_SHOW: alerts disabled")
         return
     end
@@ -615,7 +630,7 @@ eventHandlers.MERCHANT_SHOW = function()
             local count = GetInventoryItemCount("player", slot) or 0
             Debug("MERCHANT_SHOW: ammo count=" .. tostring(count) .. ", threshold=" .. threshold)
             if count < threshold then
-                SendAlert("Low ammo (" .. count .. ")!", KWA_HunterAssist_Config.ammoSound)
+                SendAlert("Low ammo (" .. count .. ")!", KWA_HunterAssist_Config.equipment.lowAmmoSoundEnabled)
             else
                 Debug("MERCHANT_SHOW: ammo not below threshold")
             end
@@ -637,7 +652,7 @@ f:SetScript(
             local elapsed = arg1 or 0
 
             -- Unhappy repeat (only OUT OF COMBAT)
-            if KWA_HunterAssist_Config.enabled and unhappyActive and not inCombat then
+            if KWA_HunterAssist_Config.general.addonEnabled and unhappyActive and not inCombat then
                 alertTimer = alertTimer + elapsed
                 if alertTimer >= CurrentInterval() then
                     AlertUnhappy()
