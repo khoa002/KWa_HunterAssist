@@ -37,7 +37,7 @@ This is the first module in a growing suite under the `[KWa]` namespace.
 ### 🔫 Low Ammo Warning
 
 - Checks your equipped ammo count when leaving combat.
-- Alerts if the count falls below a configurable threshold (default 200).
+- Alerts if the count falls below a configurable threshold (default 200), optionally plays a sound.
 
 ### 🧪 Debug Mode
 
@@ -63,6 +63,7 @@ SavedVariables: `KWA_HunterAssist_Config`
     feeddur  = 20     -- seconds for the Feed Pet countdown
     feedname = "Feed Pet Effect"
     ammo     = 200    -- ammo warning threshold
+    ammoSound = true  -- play sound on low ammo (requires sound=true)
     debug    = false  -- debug log off by default
 
 Bounds and validation:

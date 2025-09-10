@@ -11,6 +11,7 @@ local DEFAULTS = {
     feeddur = 20, -- default Feed Pet buff duration in seconds (3..120)
     feedname = "Feed Pet Effect", -- pet buff name to match (if tooltip API available)
     ammo = 200, -- ammo warning threshold
+    ammoSound = true, -- play sound on low ammo alert
     debug = false -- debug log off by default
 }
 
@@ -23,6 +24,7 @@ KWA_HunterAssist_Config =
         feeddur = DEFAULTS.feeddur,
         feedname = DEFAULTS.feedname,
         ammo = DEFAULTS.ammo,
+        ammoSound = DEFAULTS.ammoSound,
         debug = DEFAULTS.debug,
         configX = nil,
         configY = nil
@@ -277,6 +279,56 @@ ammoDefault:SetScript("OnClick", function()
     ammoBox:SetText(DEFAULTS.ammo)
 end)
 
+-- Low ammo sound
+local ammoSoundLabel = configFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+ammoSoundLabel:SetPoint("TOPLEFT", ammoLabel, "BOTTOMLEFT", 0, -10)
+ammoSoundLabel:SetText("Sound on low ammo")
+local ammoSoundCheck = CreateFrame("CheckButton", "KWA_ConfigAmmoSound", configFrame, "UICheckButtonTemplate")
+ammoSoundCheck:SetPoint("LEFT", ammoSoundLabel, "LEFT", COL_INPUT_X - COL_LABEL_X, 0)
+local ammoSoundDefault = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
+ammoSoundDefault:SetWidth(60)
+ammoSoundDefault:SetHeight(20)
+ammoSoundDefault:SetPoint("LEFT", ammoSoundLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
+ammoSoundDefault:SetText("Default")
+ammoSoundDefault:SetScript("OnClick", function()
+    KWA_HunterAssist_Config.ammoSound = DEFAULTS.ammoSound
+    ammoSoundCheck:SetChecked(DEFAULTS.ammoSound)
+end)
+ammoSoundCheck:SetScript("OnClick", function()
+    KWA_HunterAssist_Config.ammoSound = this:GetChecked()
+end)
+
+-- ======= Equipment group =======
+local equipGroup = configFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+equipGroup:SetPoint("TOPLEFT", feedNameLabel, "BOTTOMLEFT", 0, -20)
+equipGroup:SetText("Equipment")
+
+-- Ammo threshold
+local ammoLabel = configFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+ammoLabel:SetPoint("TOPLEFT", equipGroup, "BOTTOMLEFT", 0, -10)
+ammoLabel:SetText("Ammo threshold:")
+local ammoBox = CreateFrame("EditBox", "KWA_ConfigAmmo", configFrame, "InputBoxTemplate")
+ammoBox:SetWidth(40)
+ammoBox:SetHeight(20)
+ammoBox:SetPoint("LEFT", ammoLabel, "LEFT", COL_INPUT_X - COL_LABEL_X, 0)
+ammoBox:SetAutoFocus(false)
+ammoBox:SetScript("OnEnterPressed", function()
+    local v = tonumber(this:GetText())
+    if v then
+        KWA_HunterAssist_Config.ammo = v
+    end
+    this:ClearFocus()
+end)
+local ammoDefault = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
+ammoDefault:SetWidth(60)
+ammoDefault:SetHeight(20)
+ammoDefault:SetPoint("LEFT", ammoLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
+ammoDefault:SetText("Default")
+ammoDefault:SetScript("OnClick", function()
+    KWA_HunterAssist_Config.ammo = DEFAULTS.ammo
+    ammoBox:SetText(DEFAULTS.ammo)
+end)
+
 -- Close button
 local closeBtn = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
 closeBtn:SetWidth(80)
@@ -294,6 +346,7 @@ configFrame:SetScript("OnShow", function()
     feedDurBox:SetText(KWA_HunterAssist_Config.feeddur)
     feedNameBox:SetText(KWA_HunterAssist_Config.feedname or "")
     ammoBox:SetText(KWA_HunterAssist_Config.ammo)
+    ammoSoundCheck:SetChecked(KWA_HunterAssist_Config.ammoSound)
     debugCheck:SetChecked(KWA_HunterAssist_Config.debug)
 end)
 
@@ -309,7 +362,7 @@ local function Debug(msg)
     end
 end
 
-local function SendAlert(msg)
+local function SendAlert(msg, playSound)
     -- Only alert OUT OF COMBAT
     if inCombat then
         Debug("Suppressed alert (in combat): " .. msg)
@@ -318,7 +371,7 @@ local function SendAlert(msg)
     if UIErrorsFrame and UIErrorsFrame.AddMessage then
         UIErrorsFrame:AddMessage(msg, 1.0, 0.1, 0.1, 1.0)
     end
-    if KWA_HunterAssist_Config.sound and PlaySoundFile then
+    if KWA_HunterAssist_Config.sound and (playSound == nil or playSound) and PlaySoundFile then
         PlaySoundFile("Sound\\Interface\\RaidWarning.wav")
     end
 end
@@ -519,7 +572,7 @@ eventHandlers.PLAYER_REGEN_ENABLED = function()
             local count = GetInventoryItemCount("player", slot) or 0
             Debug("Ammo count=" .. tostring(count))
             if count > 0 and count < threshold then
-                SendAlert("Low ammo (" .. count .. ")!")
+                SendAlert("Low ammo (" .. count .. ")!", KWA_HunterAssist_Config.ammoSound)
             end
         end
     end
