@@ -36,32 +36,15 @@ This is the first module in a growing suite under the `[KWa]` namespace.
 
 ### 🧪 Debug Mode
 
-- `/kwa ha debug on` prints detection steps so you can see what the addon is doing.
+- Debug mode prints detection steps so you can see what the addon is doing.
 - Optional helper prints your pet’s current buff names for localization or custom servers.
+- Enable via the configuration window (`/kwa config`).
 
 ---
 
-## Commands
+## Configuration
 
-All commands are scoped under `/kwa ha`. For a movable configuration window use `/kwa config`.
-
-| Command                        | Description                                                     |
-|--------------------------------|-----------------------------------------------------------------|
-| `/kwa config`                  | Open the configuration window.                                  |
-| `/kwa config`                  | Open the configuration window.                                  |
-| `/kwa ha on`                   | Enable the addon.                                               |
-| `/kwa ha off`                  | Disable the addon.                                              |
-| `/kwa ha test`                 | Test the Unhappy alert and the Feed Pet countdown.              |
-| `/kwa ha sound on`             | Enable the alert sound.                                         |
-| `/kwa ha sound off`            | Disable the alert sound.                                        |
-| `/kwa ha interval <1-60>`      | Set repeat interval for Unhappy alerts in seconds. Default: 5.  |
-| `/kwa ha feeddur <3-120>`      | Set expected Feed Pet buff duration in seconds. Default: 20.    |
-| `/kwa ha feedname <buff name>` | Set the pet buff name to watch for. Default: `Feed Pet Effect`. |
-| `/kwa ha debug on`             | Enable debug output.                                            |
-| `/kwa ha debug off`            | Disable debug output.                                           |
-| `/kwa ha dumpbuffs`            | Print current pet buff names if tooltip API is available.       |
-| `/kwa ha reset`                | Reset all settings to defaults.                                 |
-| `/kwa ha help`                 | Show a quick usage summary.                                     |
+Open the configuration window with `/kwa config`.
 
 ---
 
@@ -127,26 +110,22 @@ Bounds and validation:
 
 ## Troubleshooting
 
-- Turn on debug:
-    - `/kwa ha debug on`
+- Turn on debug in the configuration window (`/kwa config`).
     - You should see lines like:
         - `Detected Feed Pet via UseAction slot X`
         - `UNIT_AURA for pet. feedPendingCast=true`
         - `Feed buff detected -> start countdown`
-- If the countdown does not start, set the buff name explicitly:
-    - `/kwa ha feedname Feed Pet Effect`
-    - For non-English clients, set the localized buff name shown by `/kwa ha dumpbuffs`.
+- If the countdown does not start, set the buff name to `Feed Pet Effect` in the configuration window.
+    - For non-English clients, set the localized buff name shown by the helper.
 - If you use a macro, include `/cast Feed Pet` exactly.
-- If alerts are too frequent or too quiet, adjust:
-    - `/kwa ha interval 10`
-    - `/kwa ha sound off`
+- If alerts are too frequent or too quiet, adjust the interval or sound in the configuration window.
 
 ---
 
 ## Versioning
 
 - **v0.2.0**: Unhappy alerts are out of combat only with a queued post-combat alert. Robust Feed Pet detection via
-  `UseAction` in addition to `CastSpell` and `CastSpellByName`. Added debug mode and `/kwa ha dumpbuffs`. Font
+  `UseAction` in addition to `CastSpell` and `CastSpellByName`. Added debug mode and a pet buff dump helper. Font
   improvements for visibility.
 - **v0.1.0**: Initial public version. Unhappy alerts with repeat interval, Feed Pet countdown, settings reset, and
   colored `[KWa]` tag in the AddOns list.

@@ -10,7 +10,7 @@ local DEFAULTS = {
     interval = 5, -- seconds between repeat alerts while Unhappy (1..60)
     feeddur = 20, -- default Feed Pet buff duration in seconds (3..120)
     feedname = "Feed Pet Effect", -- pet buff name to match (if tooltip API available)
-    debug = false -- /kwa ha debug on|off
+    debug = false -- debug log off by default
 }
 
 KWA_HunterAssist_Config =
@@ -89,36 +89,83 @@ configFrame:Hide()
 local cfgTitle = configFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 cfgTitle:SetPoint("TOP", 0, -10)
 cfgTitle:SetText("[KWa]HunterAssist")
+local COL_LABEL_X, COL_INPUT_X, COL_DEFAULT_X = 20, 160, 240
 
+-- ======= General group =======
+local generalGroup = configFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+generalGroup:SetPoint("TOPLEFT", COL_LABEL_X, -30)
+generalGroup:SetText("General")
+
+-- Addon enabled
+local enabledLabel = configFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+enabledLabel:SetPoint("TOPLEFT", generalGroup, "BOTTOMLEFT", 0, -10)
+enabledLabel:SetText("Addon enabled")
+local enabledCheck = CreateFrame("CheckButton", "KWA_ConfigEnabled", configFrame, "UICheckButtonTemplate")
+enabledCheck:SetPoint("LEFT", enabledLabel, "LEFT", COL_INPUT_X - COL_LABEL_X, 0)
+local enabledDefault = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
+enabledDefault:SetWidth(60)
+enabledDefault:SetHeight(20)
+enabledDefault:SetPoint("LEFT", enabledLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
+enabledDefault:SetText("Default")
+enabledDefault:SetScript("OnClick", function()
+    KWA_HunterAssist_Config.enabled = DEFAULTS.enabled
+    enabledCheck:SetChecked(DEFAULTS.enabled)
+end)
+enabledCheck:SetScript("OnClick", function()
+    KWA_HunterAssist_Config.enabled = this:GetChecked()
+end)
+
+-- Debug
+local debugLabel = configFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+debugLabel:SetPoint("TOPLEFT", enabledLabel, "BOTTOMLEFT", 0, -10)
+debugLabel:SetText("Enable debug")
+local debugCheck = CreateFrame("CheckButton", "KWA_ConfigDebug", configFrame, "UICheckButtonTemplate")
+debugCheck:SetPoint("LEFT", debugLabel, "LEFT", COL_INPUT_X - COL_LABEL_X, 0)
+local debugDefault = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
+debugDefault:SetWidth(60)
+debugDefault:SetHeight(20)
+debugDefault:SetPoint("LEFT", debugLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
+debugDefault:SetText("Default")
+debugDefault:SetScript("OnClick", function()
+    KWA_HunterAssist_Config.debug = DEFAULTS.debug
+    debugCheck:SetChecked(DEFAULTS.debug)
+end)
+debugCheck:SetScript("OnClick", function()
+    KWA_HunterAssist_Config.debug = this:GetChecked()
+end)
+
+-- ======= Pet Happiness group =======
 local petGroup = configFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-petGroup:SetPoint("TOPLEFT", 20, -30)
+petGroup:SetPoint("TOPLEFT", debugLabel, "BOTTOMLEFT", 0, -20)
 petGroup:SetText("Pet Happiness")
 
--- Sound checkbox
+-- Play sound
+local soundLabel = configFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+soundLabel:SetPoint("TOPLEFT", petGroup, "BOTTOMLEFT", 0, -10)
+soundLabel:SetText("Play sound")
 local soundCheck = CreateFrame("CheckButton", "KWA_ConfigSound", configFrame, "UICheckButtonTemplate")
-soundCheck:SetPoint("TOPLEFT", petGroup, "BOTTOMLEFT", 0, -10)
-getglobal(soundCheck:GetName() .. "Text"):SetText("Play sound")
-soundCheck:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.sound = this:GetChecked()
-end)
+soundCheck:SetPoint("LEFT", soundLabel, "LEFT", COL_INPUT_X - COL_LABEL_X, 0)
 local soundDefault = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
 soundDefault:SetWidth(60)
 soundDefault:SetHeight(20)
-soundDefault:SetPoint("LEFT", soundCheck, "RIGHT", 120, 0)
+soundDefault:SetPoint("LEFT", soundLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
 soundDefault:SetText("Default")
 soundDefault:SetScript("OnClick", function()
     KWA_HunterAssist_Config.sound = DEFAULTS.sound
     soundCheck:SetChecked(DEFAULTS.sound)
 end)
+soundCheck:SetScript("OnClick", function()
+    KWA_HunterAssist_Config.sound = this:GetChecked()
+end)
 
--- Interval edit box
+-- Alert interval
 local intervalLabel = configFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-intervalLabel:SetPoint("TOPLEFT", soundCheck, "BOTTOMLEFT", 0, -12)
+intervalLabel:SetPoint("TOPLEFT", soundLabel, "BOTTOMLEFT", 0, -12)
 intervalLabel:SetText("Alert interval (1-60):")
 local intervalBox = CreateFrame("EditBox", "KWA_ConfigInterval", configFrame, "InputBoxTemplate")
 intervalBox:SetWidth(40)
 intervalBox:SetHeight(20)
-intervalBox:SetPoint("LEFT", intervalLabel, "RIGHT", 10, 0)
+intervalBox:SetPoint("LEFT", intervalLabel, "LEFT", COL_INPUT_X - COL_LABEL_X, 0)
 intervalBox:SetAutoFocus(false)
 intervalBox:SetScript("OnEnterPressed", function()
     local v = tonumber(this:GetText())
@@ -131,7 +178,7 @@ end)
 local intervalDefault = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
 intervalDefault:SetWidth(60)
 intervalDefault:SetHeight(20)
-intervalDefault:SetPoint("LEFT", intervalBox, "RIGHT", 10, 0)
+intervalDefault:SetPoint("LEFT", intervalLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
 intervalDefault:SetText("Default")
 intervalDefault:SetScript("OnClick", function()
     KWA_HunterAssist_Config.interval = DEFAULTS.interval
@@ -146,7 +193,7 @@ feedDurLabel:SetText("Feed duration (3-120):")
 local feedDurBox = CreateFrame("EditBox", "KWA_ConfigFeeddur", configFrame, "InputBoxTemplate")
 feedDurBox:SetWidth(40)
 feedDurBox:SetHeight(20)
-feedDurBox:SetPoint("LEFT", feedDurLabel, "RIGHT", 10, 0)
+feedDurBox:SetPoint("LEFT", feedDurLabel, "LEFT", COL_INPUT_X - COL_LABEL_X, 0)
 feedDurBox:SetAutoFocus(false)
 feedDurBox:SetScript("OnEnterPressed", function()
     local v = tonumber(this:GetText())
@@ -161,7 +208,7 @@ end)
 local feedDurDefault = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
 feedDurDefault:SetWidth(60)
 feedDurDefault:SetHeight(20)
-feedDurDefault:SetPoint("LEFT", feedDurBox, "RIGHT", 10, 0)
+feedDurDefault:SetPoint("LEFT", feedDurLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
 feedDurDefault:SetText("Default")
 feedDurDefault:SetScript("OnClick", function()
     KWA_HunterAssist_Config.feeddur = DEFAULTS.feeddur
@@ -178,7 +225,7 @@ feedNameLabel:SetText("Feed buff name:")
 local feedNameBox = CreateFrame("EditBox", "KWA_ConfigFeedName", configFrame, "InputBoxTemplate")
 feedNameBox:SetWidth(120)
 feedNameBox:SetHeight(20)
-feedNameBox:SetPoint("LEFT", feedNameLabel, "RIGHT", 10, 0)
+feedNameBox:SetPoint("LEFT", feedNameLabel, "LEFT", COL_INPUT_X - COL_LABEL_X, 0)
 feedNameBox:SetAutoFocus(false)
 feedNameBox:SetScript("OnEnterPressed", function()
     local txt = this:GetText()
@@ -190,49 +237,11 @@ end)
 local feedNameDefault = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
 feedNameDefault:SetWidth(60)
 feedNameDefault:SetHeight(20)
-feedNameDefault:SetPoint("LEFT", feedNameBox, "RIGHT", 10, 0)
+feedNameDefault:SetPoint("LEFT", feedNameLabel, "LEFT", COL_DEFAULT_X - COL_LABEL_X, 0)
 feedNameDefault:SetText("Default")
 feedNameDefault:SetScript("OnClick", function()
     KWA_HunterAssist_Config.feedname = DEFAULTS.feedname
     feedNameBox:SetText(DEFAULTS.feedname)
-end)
-
-local generalGroup = configFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-generalGroup:SetPoint("TOPLEFT", feedNameLabel, "BOTTOMLEFT", 0, -20)
-generalGroup:SetText("General")
-
--- Addon enabled checkbox
-local enabledCheck = CreateFrame("CheckButton", "KWA_ConfigEnabled", configFrame, "UICheckButtonTemplate")
-enabledCheck:SetPoint("TOPLEFT", generalGroup, "BOTTOMLEFT", 0, -10)
-getglobal(enabledCheck:GetName() .. "Text"):SetText("Addon enabled")
-enabledCheck:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.enabled = this:GetChecked()
-end)
-local enabledDefault = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
-enabledDefault:SetWidth(60)
-enabledDefault:SetHeight(20)
-enabledDefault:SetPoint("LEFT", enabledCheck, "RIGHT", 120, 0)
-enabledDefault:SetText("Default")
-enabledDefault:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.enabled = DEFAULTS.enabled
-    enabledCheck:SetChecked(DEFAULTS.enabled)
-end)
-
--- Debug checkbox
-local debugCheck = CreateFrame("CheckButton", "KWA_ConfigDebug", configFrame, "UICheckButtonTemplate")
-debugCheck:SetPoint("TOPLEFT", enabledCheck, "BOTTOMLEFT", 0, -10)
-getglobal(debugCheck:GetName() .. "Text"):SetText("Enable debug")
-debugCheck:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.debug = this:GetChecked()
-end)
-local debugDefault = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
-debugDefault:SetWidth(60)
-debugDefault:SetHeight(20)
-debugDefault:SetPoint("LEFT", debugCheck, "RIGHT", 120, 0)
-debugDefault:SetText("Default")
-debugDefault:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.debug = DEFAULTS.debug
-    debugCheck:SetChecked(DEFAULTS.debug)
 end)
 
 -- Close button
@@ -402,7 +411,7 @@ f:SetScript(
                     configFrame:SetPoint("CENTER", UIParent, "CENTER")
                 end
                 inCombat = UnitAffectingCombat("player") or false
-                DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r loaded. /kwa ha help or /kwa config")
+                DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r loaded. Use /kwa config to open the options.")
                 Debug("PLAYER_LOGIN; inCombat=" .. tostring(inCombat))
             elseif event == "PLAYER_ENTERING_WORLD" or event == "UNIT_PET" then
                 Debug(event .. ": reset states")
@@ -522,120 +531,19 @@ UseAction = function(slot, checkCursor, onSelf)
     return _Orig_UseAction(slot, checkCursor, onSelf)
 end
 
--- ======= Slash: /kwa ha {options} =======
+-- ======= Slash: /kwa =======
 SLASH_KWA1 = "/kwa"
 SlashCmdList["KWA"] = function(msg)
     msg = tostring(msg or "")
     msg = string.lower((string.gsub(msg, "^%s*(.-)%s*$", "%1")))
 
-    local sp = string.find(msg, "%s")
-    local cmd, rest
-    if sp then
-        cmd = string.sub(msg, 1, sp - 1)
-        rest = string.sub(msg, sp + 1)
-        rest = string.gsub(rest, "^%s*", "")
-    else
-        cmd, rest = msg, ""
-    end
-
-    if cmd == "config" then
+    if msg == "config" then
         if configFrame:IsShown() then
             configFrame:Hide()
         else
             configFrame:Show()
         end
-        return
-    end
-
-    if cmd ~= "ha" then
-        return
-    end
-
-    if rest == "help" or rest == "" then
-        DEFAULT_CHAT_FRAME:AddMessage(
-                "|cff00ff00[KWa]HunterAssist:|r /kwa ha on|off | sound on|off | test | interval <1-60> | feeddur <3-120> | feedname <buff name> | debug on|off | reset"
-        )
-        DEFAULT_CHAT_FRAME:AddMessage(
-                "|cffffff00Notes:|r Unhappy alerts are OUT-OF-COMBAT only; if Unhappy during combat, one alert will fire when combat ends."
-        )
-    elseif rest == "on" then
-        KWA_HunterAssist_Config.enabled = true
-        DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r enabled.")
-    elseif rest == "off" then
-        KWA_HunterAssist_Config.enabled = false
-        DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r disabled.")
-    elseif rest == "sound on" then
-        KWA_HunterAssist_Config.sound = true
-        DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r sound enabled.")
-    elseif rest == "sound off" then
-        KWA_HunterAssist_Config.sound = false
-        DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r sound disabled.")
-    elseif string.sub(rest, 1, 8) == "interval" then
-        local n = tonumber(string.gsub(string.sub(rest, 9), "^%s*", ""))
-        if n then
-            if n < 1 then
-                n = 1
-            end
-            if n > 60 then
-                n = 60
-            end
-            KWA_HunterAssist_Config.interval = n
-            DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r unhappy repeat set to " .. n .. "s.")
-            alertTimer = 0
-        else
-            DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r usage: /kwa ha interval <1-60>")
-        end
-    elseif string.sub(rest, 1, 7) == "feeddur" then
-        local n = tonumber(string.gsub(string.sub(rest, 8), "^%s*", ""))
-        if n then
-            if n < 3 then
-                n = 3
-            end
-            if n > 120 then
-                n = 120
-            end
-            KWA_HunterAssist_Config.feeddur = n
-            DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r feed duration set to " .. n .. "s.")
-            if feedActive then
-                ShowFeedCountdown(n)
-            end
-        else
-            DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r usage: /kwa ha feeddur <3-120>")
-        end
-    elseif string.sub(rest, 1, 8) == "feedname" then
-        local name = string.gsub(string.sub(rest, 9), "^%s*", "")
-        if name and name ~= "" then
-            KWA_HunterAssist_Config.feedname = name
-            DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r feed buff name set to: " .. name)
-        else
-            DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r usage: /kwa ha feedname <buff name>")
-        end
-    elseif string.sub(rest, 1, 5) == "debug" then
-        local flag = string.gsub(string.sub(rest, 6), "^%s*", "")
-        if flag == "on" then
-            KWA_HunterAssist_Config.debug = true
-            DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r debug ON")
-        elseif flag == "off" then
-            KWA_HunterAssist_Config.debug = false
-            DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r debug OFF")
-        else
-            DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r usage: /kwa ha debug on|off")
-        end
-    elseif rest == "reset" then
-        for k, v in pairs(DEFAULTS) do
-            KWA_HunterAssist_Config[k] = v
-        end
-        DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r settings reset to defaults.")
-        alertTimer = 0
-        pendingUnhappyAlert = false
-        HideFeedCountdown()
-    elseif rest == "test" then
-        local petName = UnitName("pet") or "Your pet"
-        SendAlert("Test: " .. petName .. " is UNHAPPY!")
-        ShowFeedCountdown(CurrentFeedDur())
     else
-        DEFAULT_CHAT_FRAME:AddMessage(
-                "|cff00ff00[KWa]HunterAssist:|r /kwa ha on|off | sound on|off | test | interval <1-60> | feeddur <3-120> | feedname <buff name> | debug on|off | reset"
-        )
+        DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r Welcome! Use /kwa config to open the configuration window.")
     end
 end
