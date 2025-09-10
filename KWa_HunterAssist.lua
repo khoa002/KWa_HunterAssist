@@ -289,26 +289,28 @@ local function SendAlert(msg)
     end
 end
 
+local function GetPetName()
+    return UnitName("pet") or "Your pet"
+end
+
+local function AlertUnhappy()
+    SendAlert(GetPetName() .. " is UNHAPPY!")
+    alertTimer = 0
+end
+
+local function Clamp(v, min, max, default)
+    local n = tonumber(v) or default
+    if n < min then n = min end
+    if n > max then n = max end
+    return n
+end
+
 local function CurrentInterval()
-    local iv = tonumber(KWA_HunterAssist_Config.interval) or 5
-    if iv < 1 then
-        iv = 1
-    end
-    if iv > 60 then
-        iv = 60
-    end
-    return iv
+    return Clamp(KWA_HunterAssist_Config.interval, 1, 60, DEFAULTS.interval)
 end
 
 local function CurrentFeedDur()
-    local d = tonumber(KWA_HunterAssist_Config.feeddur) or 20
-    if d < 3 then
-        d = 3
-    end
-    if d > 120 then
-        d = 120
-    end
-    return d
+    return Clamp(KWA_HunterAssist_Config.feeddur, 3, 120, DEFAULTS.feeddur)
 end
 
 local function PetHasFeedBuff()
@@ -332,6 +334,11 @@ local function PetHasFeedBuff()
     return feedPendingCast
 end
 
+local function MarkFeedPending(src)
+    feedPendingCast = true
+    Debug("Detected Feed Pet via " .. src)
+end
+
 -- ======= Core checks =======
 local function CheckPet(force)
     if not KWA_HunterAssist_Config.enabled then
@@ -351,7 +358,6 @@ local function CheckPet(force)
     end
 
     local happiness = GetPetHappiness and GetPetHappiness()
-    local petName = UnitName("pet") or "Your pet"
 
     if happiness == 1 then
         -- Pet is unhappy
@@ -361,8 +367,7 @@ local function CheckPet(force)
                 pendingUnhappyAlert = true
                 Debug("Unhappy transition DURING combat -> queued for after combat.")
             else
-                SendAlert(petName .. " is UNHAPPY!")
-                alertTimer = 0
+                AlertUnhappy()
                 pendingUnhappyAlert = false
                 Debug("Unhappy transition -> immediate alert (out of combat).")
             end
@@ -387,77 +392,96 @@ f:RegisterEvent("SPELLCAST_START")
 f:RegisterEvent("PLAYER_REGEN_DISABLED")
 f:RegisterEvent("PLAYER_REGEN_ENABLED")
 
-f:SetScript(
-        "OnEvent",
-        function()
-            if event == "PLAYER_LOGIN" then
-                KWA_HunterAssist_Config = KWA_HunterAssist_Config or {}
-                for k, v in pairs(DEFAULTS) do
-                    if KWA_HunterAssist_Config[k] == nil then
-                        KWA_HunterAssist_Config[k] = v
-                    end
-                end
-                if KWA_HunterAssist_Config.configX and KWA_HunterAssist_Config.configY then
-                    configFrame:ClearAllPoints()
-                    configFrame:SetPoint(
-                            "TOPLEFT",
-                            UIParent,
-                            "BOTTOMLEFT",
-                            KWA_HunterAssist_Config.configX,
-                            KWA_HunterAssist_Config.configY
-                    )
-                else
-                    configFrame:ClearAllPoints()
-                    configFrame:SetPoint("CENTER", UIParent, "CENTER")
-                end
-                inCombat = UnitAffectingCombat("player") or false
-                DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r loaded. Use /kwa config to open the options.")
-                Debug("PLAYER_LOGIN; inCombat=" .. tostring(inCombat))
-            elseif event == "PLAYER_ENTERING_WORLD" or event == "UNIT_PET" then
-                Debug(event .. ": reset states")
-                CheckPet(true)
-                HideFeedCountdown()
-                feedPendingCast = false
-            elseif event == "UNIT_HAPPINESS" and arg1 == "pet" then
-                Debug("UNIT_HAPPINESS for pet")
-                CheckPet(false)
-            elseif event == "SPELLCAST_START" then
-                local spell = arg1
-                Debug("SPELLCAST_START: " .. tostring(spell))
-                if spell and string.lower(spell) == "feed pet" then
-                    feedPendingCast = true
-                    Debug("Detected Feed Pet via SPELLCAST_START")
-                end
-            elseif event == "UNIT_AURA" and arg1 == "pet" then
-                Debug("UNIT_AURA for pet. feedPendingCast=" .. tostring(feedPendingCast))
-                if feedPendingCast and PetHasFeedBuff() then
-                    Debug("Feed buff detected -> start countdown")
-                    ShowFeedCountdown(CurrentFeedDur())
-                    feedPendingCast = false
-                elseif feedActive and not PetHasFeedBuff() then
-                    Debug("Feed buff ended -> hide countdown")
-                    HideFeedCountdown()
-                end
-            elseif event == "PLAYER_REGEN_DISABLED" then
-                -- Feeding already cancels on combat; leave unhappy timer paused automatically.
-                inCombat = true
-                Debug("PLAYER_REGEN_DISABLED -> inCombat=true")
-            elseif event == "PLAYER_REGEN_ENABLED" then
-                inCombat = false
-                Debug("PLAYER_REGEN_ENABLED -> inCombat=false")
-                -- If we became unhappy during combat, fire the queued alert now.
-                if pendingUnhappyAlert and KWA_HunterAssist_Config.enabled and UnitExists("pet") then
-                    local happiness = GetPetHappiness and GetPetHappiness()
-                    if happiness == 1 then
-                        local petName = UnitName("pet") or "Your pet"
-                        SendAlert(petName .. " is UNHAPPY!")
-                        alertTimer = 0
-                    end
-                end
-                pendingUnhappyAlert = false
-            end
+local eventHandlers = {}
+
+eventHandlers.PLAYER_LOGIN = function()
+    KWA_HunterAssist_Config = KWA_HunterAssist_Config or {}
+    for k, v in pairs(DEFAULTS) do
+        if KWA_HunterAssist_Config[k] == nil then
+            KWA_HunterAssist_Config[k] = v
         end
-)
+    end
+    if KWA_HunterAssist_Config.configX and KWA_HunterAssist_Config.configY then
+        configFrame:ClearAllPoints()
+        configFrame:SetPoint(
+                "TOPLEFT",
+                UIParent,
+                "BOTTOMLEFT",
+                KWA_HunterAssist_Config.configX,
+                KWA_HunterAssist_Config.configY
+        )
+    else
+        configFrame:ClearAllPoints()
+        configFrame:SetPoint("CENTER", UIParent, "CENTER")
+    end
+    inCombat = UnitAffectingCombat("player") or false
+    DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[KWa]HunterAssist:|r loaded. Use /kwa config to open the options.")
+    Debug("PLAYER_LOGIN; inCombat=" .. tostring(inCombat))
+end
+
+local function ResetStates(evt)
+    Debug(evt .. ": reset states")
+    CheckPet(true)
+    HideFeedCountdown()
+    feedPendingCast = false
+end
+
+eventHandlers.PLAYER_ENTERING_WORLD = ResetStates
+eventHandlers.UNIT_PET = ResetStates
+
+eventHandlers.UNIT_HAPPINESS = function(_, unit)
+    if unit == "pet" then
+        Debug("UNIT_HAPPINESS for pet")
+        CheckPet(false)
+    end
+end
+
+eventHandlers.SPELLCAST_START = function(_, spell)
+    Debug("SPELLCAST_START: " .. tostring(spell))
+    if spell and string.lower(spell) == "feed pet" then
+        MarkFeedPending("SPELLCAST_START")
+    end
+end
+
+eventHandlers.UNIT_AURA = function(_, unit)
+    if unit == "pet" then
+        Debug("UNIT_AURA for pet. feedPendingCast=" .. tostring(feedPendingCast))
+        if feedPendingCast and PetHasFeedBuff() then
+            Debug("Feed buff detected -> start countdown")
+            ShowFeedCountdown(CurrentFeedDur())
+            feedPendingCast = false
+        elseif feedActive and not PetHasFeedBuff() then
+            Debug("Feed buff ended -> hide countdown")
+            HideFeedCountdown()
+        end
+    end
+end
+
+eventHandlers.PLAYER_REGEN_DISABLED = function()
+    -- Feeding already cancels on combat; leave unhappy timer paused automatically.
+    inCombat = true
+    Debug("PLAYER_REGEN_DISABLED -> inCombat=true")
+end
+
+eventHandlers.PLAYER_REGEN_ENABLED = function()
+    inCombat = false
+    Debug("PLAYER_REGEN_ENABLED -> inCombat=false")
+    -- If we became unhappy during combat, fire the queued alert now.
+    if pendingUnhappyAlert and KWA_HunterAssist_Config.enabled and UnitExists("pet") then
+        local happiness = GetPetHappiness and GetPetHappiness()
+        if happiness == 1 then
+            AlertUnhappy()
+        end
+    end
+    pendingUnhappyAlert = false
+end
+
+f:SetScript("OnEvent", function()
+    local handler = eventHandlers[event]
+    if handler then
+        handler(event, arg1)
+    end
+end)
 
 -- ======= OnUpdate =======
 f:SetScript(
@@ -469,9 +493,7 @@ f:SetScript(
             if KWA_HunterAssist_Config.enabled and unhappyActive and not inCombat then
                 alertTimer = alertTimer + elapsed
                 if alertTimer >= CurrentInterval() then
-                    local petName = UnitName("pet") or "Your pet"
-                    SendAlert(petName .. " is UNHAPPY!")
-                    alertTimer = 0
+                    AlertUnhappy()
                 end
             end
 
@@ -500,8 +522,7 @@ CastSpell = function(spellId, bookTab)
     if GetSpellName then
         local name = GetSpellName(spellId, bookTab)
         if name and string.lower(name) == "feed pet" then
-            feedPendingCast = true
-            Debug("Detected Feed Pet via CastSpell")
+            MarkFeedPending("CastSpell")
         end
     end
     return _Orig_CastSpell(spellId, bookTab)
@@ -510,8 +531,7 @@ end
 local _Orig_CastSpellByName = CastSpellByName
 CastSpellByName = function(spell, onSelf)
     if spell and string.find(string.lower(spell), "^feed pet") then
-        feedPendingCast = true
-        Debug("Detected Feed Pet via CastSpellByName")
+        MarkFeedPending("CastSpellByName")
     end
     return _Orig_CastSpellByName(spell, onSelf)
 end
@@ -524,8 +544,7 @@ UseAction = function(slot, checkCursor, onSelf)
         local name = GameTooltipTextLeft1:GetText()
         GameTooltip:Hide()
         if name and string.lower(name) == "feed pet" then
-            feedPendingCast = true
-            Debug("Detected Feed Pet via UseAction slot " .. tostring(slot))
+            MarkFeedPending("UseAction slot " .. tostring(slot))
         end
     end
     return _Orig_UseAction(slot, checkCursor, onSelf)
