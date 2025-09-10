@@ -48,6 +48,7 @@ All commands are scoped under `/kwa ha`. For a movable configuration window use 
 | Command                        | Description                                                     |
 |--------------------------------|-----------------------------------------------------------------|
 | `/kwa config`                  | Open the configuration window.                                  |
+| `/kwa config`                  | Open the configuration window.                                  |
 | `/kwa ha on`                   | Enable the addon.                                               |
 | `/kwa ha off`                  | Disable the addon.                                              |
 | `/kwa ha test`                 | Test the Unhappy alert and the Feed Pet countdown.              |

@@ -13,17 +13,18 @@ local DEFAULTS = {
     debug = false -- /kwa ha debug on|off
 }
 
-KWA_HunterAssist_Config = KWA_HunterAssist_Config or
-        {
-            enabled = DEFAULTS.enabled,
-            sound = DEFAULTS.sound,
-            interval = DEFAULTS.interval,
-            feeddur = DEFAULTS.feeddur,
-            feedname = DEFAULTS.feedname,
-            debug = DEFAULTS.debug,
-            configX = nil,
-            configY = nil
-        }
+KWA_HunterAssist_Config =
+    KWA_HunterAssist_Config or
+    {
+        enabled = DEFAULTS.enabled,
+        sound = DEFAULTS.sound,
+        interval = DEFAULTS.interval,
+        feeddur = DEFAULTS.feeddur,
+        feedname = DEFAULTS.feedname,
+        debug = DEFAULTS.debug,
+        configX = nil,
+        configY = nil
+    }
 
 -- ======= State =======
 local lastHappiness
@@ -70,7 +71,7 @@ local configFrame = CreateFrame("Frame", "KWA_ConfigFrame", UIParent)
 configFrame:SetWidth(320)
 configFrame:SetHeight(300)
 configFrame:SetFrameStrata("DIALOG")
-configFrame:SetBackdrop({ bgFile = "Interface/Tooltips/UI-Tooltip-Background", edgeFile = "Interface/Tooltips/UI-Tooltip-Border", edgeSize = 16, tile = true, tileSize = 16, insets = { left = 4, right = 4, top = 4, bottom = 4 } })
+configFrame:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background", edgeFile = "Interface/Tooltips/UI-Tooltip-Border", edgeSize = 16, tile = true, tileSize = 16, insets = {left = 4, right = 4, top = 4, bottom = 4}})
 configFrame:SetBackdropColor(0, 0, 0, 1)
 configFrame:EnableMouse(true)
 configFrame:SetMovable(true)
@@ -93,26 +94,9 @@ local petGroup = configFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight
 petGroup:SetPoint("TOPLEFT", 20, -30)
 petGroup:SetText("Pet Happiness")
 
--- Enabled checkbox
-local enabledCheck = CreateFrame("CheckButton", "KWA_ConfigEnabled", configFrame, "UICheckButtonTemplate")
-enabledCheck:SetPoint("TOPLEFT", petGroup, "BOTTOMLEFT", 0, -10)
-getglobal(enabledCheck:GetName() .. "Text"):SetText("Addon enabled")
-enabledCheck:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.enabled = this:GetChecked()
-end)
-local enabledDefault = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
-enabledDefault:SetWidth(60)
-enabledDefault:SetHeight(20)
-enabledDefault:SetPoint("LEFT", enabledCheck, "RIGHT", 120, 0)
-enabledDefault:SetText("Default")
-enabledDefault:SetScript("OnClick", function()
-    KWA_HunterAssist_Config.enabled = DEFAULTS.enabled
-    enabledCheck:SetChecked(DEFAULTS.enabled)
-end)
-
 -- Sound checkbox
 local soundCheck = CreateFrame("CheckButton", "KWA_ConfigSound", configFrame, "UICheckButtonTemplate")
-soundCheck:SetPoint("TOPLEFT", enabledCheck, "BOTTOMLEFT", 0, -10)
+soundCheck:SetPoint("TOPLEFT", petGroup, "BOTTOMLEFT", 0, -10)
 getglobal(soundCheck:GetName() .. "Text"):SetText("Play sound")
 soundCheck:SetScript("OnClick", function()
     KWA_HunterAssist_Config.sound = this:GetChecked()
@@ -217,9 +201,26 @@ local generalGroup = configFrame:CreateFontString(nil, "OVERLAY", "GameFontHighl
 generalGroup:SetPoint("TOPLEFT", feedNameLabel, "BOTTOMLEFT", 0, -20)
 generalGroup:SetText("General")
 
+-- Addon enabled checkbox
+local enabledCheck = CreateFrame("CheckButton", "KWA_ConfigEnabled", configFrame, "UICheckButtonTemplate")
+enabledCheck:SetPoint("TOPLEFT", generalGroup, "BOTTOMLEFT", 0, -10)
+getglobal(enabledCheck:GetName() .. "Text"):SetText("Addon enabled")
+enabledCheck:SetScript("OnClick", function()
+    KWA_HunterAssist_Config.enabled = this:GetChecked()
+end)
+local enabledDefault = CreateFrame("Button", nil, configFrame, "UIPanelButtonTemplate")
+enabledDefault:SetWidth(60)
+enabledDefault:SetHeight(20)
+enabledDefault:SetPoint("LEFT", enabledCheck, "RIGHT", 120, 0)
+enabledDefault:SetText("Default")
+enabledDefault:SetScript("OnClick", function()
+    KWA_HunterAssist_Config.enabled = DEFAULTS.enabled
+    enabledCheck:SetChecked(DEFAULTS.enabled)
+end)
+
 -- Debug checkbox
 local debugCheck = CreateFrame("CheckButton", "KWA_ConfigDebug", configFrame, "UICheckButtonTemplate")
-debugCheck:SetPoint("TOPLEFT", generalGroup, "BOTTOMLEFT", 0, -10)
+debugCheck:SetPoint("TOPLEFT", enabledCheck, "BOTTOMLEFT", 0, -10)
 getglobal(debugCheck:GetName() .. "Text"):SetText("Enable debug")
 debugCheck:SetScript("OnClick", function()
     KWA_HunterAssist_Config.debug = this:GetChecked()
