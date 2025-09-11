@@ -413,6 +413,7 @@ local function PetHasFeedBuff()
             GameTooltip:SetOwner(UIParent, "ANCHOR_NONE")
             local ok = GameTooltip:SetUnitBuff("pet", i)
             if not ok then
+                GameTooltip:Hide()
                 break
             end
             local name = GameTooltipTextLeft1:GetText()
