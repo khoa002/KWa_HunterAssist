@@ -451,6 +451,17 @@ local function CheckPet(force)
         return
     end
 
+    if UnitIsDead("pet") or PetHasFeedBuff() then
+        unhappyActive = false
+        alertTimer = 0
+        pendingUnhappyAlert = false
+        if UnitIsDead("pet") then
+            lastHappiness = nil
+            HideFeedCountdown()
+        end
+        return
+    end
+
     local happiness = GetPetHappiness and GetPetHappiness()
 
     if happiness == 1 then
@@ -548,9 +559,11 @@ eventHandlers.UNIT_AURA = function(_, unit)
             Debug("Feed buff detected -> start countdown")
             ShowFeedCountdown(CurrentFeedDur())
             feedPendingCast = false
+            CheckPet(true)
         elseif feedActive and not PetHasFeedBuff() then
             Debug("Feed buff ended -> hide countdown")
             HideFeedCountdown()
+            CheckPet(true)
         end
     end
 end

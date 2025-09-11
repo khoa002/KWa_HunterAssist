@@ -22,6 +22,7 @@ This is the first module in a growing suite under the `[KWa]` namespace.
     - If the pet becomes Unhappy during combat, one alert is queued and shown immediately after combat ends.
     - While you remain out of combat and the pet is still Unhappy, the alert repeats at a configurable interval.
 - Alerts are **local only**: red screen text (UIErrorsFrame) plus optional sound.
+- Alerts are suppressed while your pet is dead or feeding.
 
 ### 🍖 Feed Pet Countdown
 
@@ -103,6 +104,7 @@ Bounds and validation:
 
 - Listens for `UNIT_HAPPINESS` and detects transitions into Unhappy.
 - Suppresses alerts while you are in combat.
+- Suppresses alerts if your pet is dead or currently feeding.
 - If the pet became Unhappy during combat, one alert fires on `PLAYER_REGEN_ENABLED`.
 - Uses an `OnUpdate` loop to repeat the alert every `interval` seconds while still Unhappy and you remain out of combat.
 
